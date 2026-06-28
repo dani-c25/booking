@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حجز القاعة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Markazi+Text:wght@400..700&family=Aref+Ruqaa:wght@400;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#15110D;
+    --cream:#F2E8D8;
+    --bronze:#B8895C;
+    --bronze-dim:#8C6A45;
+    --wine:#5C1A1A;
+    --line: rgba(242,232,216,0.14);
+    --line-strong: rgba(242,232,216,0.28);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--cream);
+    font-family:'Tajawal', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .stage{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    position:relative;
+    padding:0 0 60px;
+    background:
+      radial-gradient(ellipse 600px 300px at 50% -10%, rgba(184,137,92,0.18), transparent 70%),
+      var(--ink);
+  }
+
+  /* Header */
+  .hero{
+    padding:48px 28px 32px;
+    text-align:center;
+    border-bottom:1px solid var(--line);
+    position:relative;
+  }
+  .hero::before, .hero::after{
+    content:'';
+    position:absolute;
+    top:24px;
+    width:36px;
+    height:1px;
+    background:var(--bronze);
+  }
+  .hero::before{ left:50%; transform:translateX(-90px); }
+  .hero::after{ left:50%; transform:translateX(54px); }
+  .eyebrow{
+    font-size:12px;
+    letter-spacing:0.15em;
+    color:var(--bronze);
+    text-transform:uppercase;
+    margin-bottom:14px;
+    font-weight:500;
+  }
+  .hero h1{
+    font-family:'Aref Ruqaa', serif;
+    font-size:38px;
+    margin:0 0 10px;
+    font-weight:700;
+    color:var(--cream);
+    line-height:1.3;
+  }
+  .hero p{
+    font-size:14.5px;
+    color:rgba(242,232,216,0.6);
+    margin:0;
+    line-height:1.7;
+  }
+
+  /* Section label */
+  .section{ padding:30px 28px; }
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .section-head h2{
+    font-family:'Markazi Text', serif;
+    font-size:22px;
+    font-weight:600;
+    margin:0;
+    color:var(--cream);
+  }
+  .section-head .hint{
+    font-size:12px;
+    color:rgba(242,232,216,0.45);
+  }
+
+  /* Month nav */
+  .month-nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .month-nav .label{
+    font-family:'Markazi Text', serif;
+    font-size:19px;
+    color:var(--bronze);
+    font-weight:600;
+  }
+  .nav-btn{
+    width:34px; height:34px;
+    border-radius:50%;
+    border:1px solid var(--line-strong);
+    background:transparent;
+    color:var(--cream);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    font-size:15px;
+    transition:.2s;
+  }
+  .nav-btn:hover{ border-color:var(--bronze); color:var(--bronze); }
+
+  /* Calendar grid */
+  .cal-weekdays{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    margin-bottom:8px;
+  }
+  .cal-weekdays span{
+    text-align:center;
+    font-size:11px;
+    color:rgba(242,232,216,0.4);
+  }
+  .cal-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:6px;
+  }
+  .day{
+    aspect-ratio:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:10px;
+    font-size:14px;
+    position:relative;
+    cursor:pointer;
+    background:rgba(242,232,216,0.03);
+    border:1px solid transparent;
+    transition:.15s;
+    color:var(--cream);
+  }
+  .day.empty{ visibility:hidden; cursor:default; }
+  .day.available:hover{
+    border-color:var(--bronze);
+    background:rgba(184,137,92,0.12);
+  }
+  .day.booked{
+    background:rgba(92,26,26,0.35);
+    color:rgba(242,232,216,0.35);
+    cursor:not-allowed;
+  }
+  .day.booked::after{
+    content:'';
+    position:absolute;
+    width:60%;
+    height:1px;
+    background:var(--wine);
+    transform:rotate(-18deg);
+  }
+  .day.pending{
+    background:rgba(184,137,92,0.08);
+    color:rgba(242,232,216,0.5);
+    border:1px dashed var(--bronze-dim);
+    cursor:not-allowed;
+  }
+  .day.today{
+    box-shadow: inset 0 0 0 1px var(--bronze);
+  }
+  .day.selected{
+    background:var(--bronze);
+    color:var(--ink);
+    font-weight:700;
+  }
+
+  .legend{
+    display:flex;
+    gap:18px;
+    margin-top:18px;
+    flex-wrap:wrap;
+    font-size:11.5px;
+    color:rgba(242,232,216,0.55);
+  }
+  .legend span{ display:flex; align-items:center; gap:6px; }
+  .dot{ width:9px; height:9px; border-radius:3px; display:inline-block; }
+  .dot.av{ background:rgba(242,232,216,0.15); border:1px solid var(--line-strong);}
+  .dot.bk{ background:rgba(92,26,26,0.6); }
+  .dot.pd{ background:rgba(184,137,92,0.3); border:1px dashed var(--bronze-dim); }
+
+  /* Conflict notice */
+  .notice{
+    margin-top:20px;
+    padding:18px;
+    border-radius:14px;
+    background:rgba(92,26,26,0.18);
+    border:1px solid rgba(92,26,26,0.5);
+    display:none;
+  }
+  .notice.show{ display:block; animation:fadeIn .3s ease; }
+  .notice .notice-title{
+    font-size:14px;
+    font-weight:700;
+    color:#E8B4B4;
+    margin-bottom:6px;
+  }
+  .notice .notice-body{
+    font-size:13px;
+    color:rgba(242,232,216,0.75);
+    line-height:1.7;
+    margin-bottom:14px;
+  }
+  .alt-dates{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .alt-chip{
+    padding:8px 14px;
+    border-radius:20px;
+    background:rgba(242,232,216,0.06);
+    border:1px solid var(--bronze-dim);
+    font-size:12.5px;
+    cursor:pointer;
+    transition:.2s;
+    color:var(--cream);
+  }
+  .alt-chip:hover{ background:var(--bronze); color:var(--ink); border-color:var(--bronze); }
+
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(-6px);} to{opacity:1; transform:translateY(0);} }
+
+  /* Form */
+  .form-panel{
+    display:none;
+    margin-top:22px;
+    border-top:1px solid var(--line);
+    padding-top:24px;
+  }
+  .form-panel.show{ display:block; animation:fadeIn .35s ease; }
+  .selected-date-banner{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 16px;
+    border-radius:12px;
+    background:rgba(184,137,92,0.1);
+    border:1px solid var(--bronze-dim);
+    margin-bottom:20px;
+  }
+  .selected-date-banner .txt{
+    font-size:13px;
+    color:rgba(242,232,216,0.6);
+  }
+  .selected-date-banner .date{
+    font-family:'Markazi Text', serif;
+    font-size:19px;
+    color:var(--bronze);
+    font-weight:700;
+  }
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block;
+    font-size:13px;
+    color:rgba(242,232,216,0.65);
+    margin-bottom:7px;
+  }
+  .field input{
+    width:100%;
+    padding:13px 14px;
+    border-radius:10px;
+    border:1px solid var(--line-strong);
+    background:rgba(242,232,216,0.04);
+    color:var(--cream);
+    font-family:'Tajawal', sans-serif;
+    font-size:14.5px;
+    outline:none;
+    transition:.2s;
+  }
+  .field input::placeholder{ color:rgba(242,232,216,0.3); }
+  .field input:focus{ border-color:var(--bronze); background:rgba(242,232,216,0.07); }
+
+  .submit-btn{
+    width:100%;
+    padding:16px;
+    border-radius:12px;
+    border:none;
+    background:var(--bronze);
+    color:var(--ink);
+    font-family:'Tajawal', sans-serif;
+    font-size:15.5px;
+    font-weight:700;
+    cursor:pointer;
+    margin-top:8px;
+    transition:.2s;
+    letter-spacing:0.01em;
+  }
+  .submit-btn:hover{ background:#cf9c6c; }
+  .submit-btn:disabled{ opacity:.4; cursor:not-allowed; }
+
+  /* Confirmation */
+  .confirm-panel{
+    display:none;
+    text-align:center;
+    padding:50px 28px;
+  }
+  .confirm-panel.show{ display:block; animation:fadeIn .4s ease; }
+  .confirm-mark{
+    width:64px; height:64px;
+    border-radius:50%;
+    border:1px solid var(--bronze);
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 22px;
+    font-size:26px;
+    color:var(--bronze);
+  }
+  .confirm-panel h2{
+    font-family:'Aref Ruqaa', serif;
+    font-size:26px;
+    margin:0 0 12px;
+  }
+  .confirm-panel p{
+    font-size:14px;
+    color:rgba(242,232,216,0.6);
+    line-height:1.8;
+    max-width:320px;
+    margin:0 auto 26px;
+  }
+  .confirm-detail{
+    display:inline-block;
+    text-align:right;
+    background:rgba(242,232,216,0.04);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:18px 22px;
+    font-size:13.5px;
+    line-height:2;
+  }
+  .confirm-detail b{ color:var(--bronze); }
+
+  .footnote{
+    text-align:center;
+    font-size:11.5px;
+    color:rgba(242,232,216,0.3);
+    padding:20px 28px 0;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="hero">
+    <div class="eyebrow">حجز القاعة</div>
+    <h1>قاعة الماس<br>للحفلات</h1>
+    <p>اختر تاريخ عرسك واحجز مكانك مباشرة<br>دون الحاجة للتواصل المسبق</p>
+  </div>
+
+  <div id="bookingFlow">
+
+    <div class="section" id="calendarSection">
+      <div class="section-head">
+        <h2>اختر التاريخ</h2>
+        <span class="hint">يوليو 2026</span>
+      </div>
+
+      <div class="month-nav">
+        <button class="nav-btn">›</button>
+        <span class="label">يوليو</span>
+        <button class="nav-btn">‹</button>
+      </div>
+
+      <div class="cal-weekdays">
+        <span>سبت</span><span>أحد</span><span>إثن</span><span>ثلا</span><span>أرب</span><span>خمي</span><span>جمع</span>
+      </div>
+
+      <div class="cal-grid" id="calGrid"></div>
+
+      <div class="legend">
+        <span><i class="dot av"></i> متاح</span>
+        <span><i class="dot bk"></i> محجوز</span>
+        <span><i class="dot pd"></i> قيد الانتظار</span>
+      </div>
+
+      <div class="notice" id="conflictNotice">
+        <div class="notice-title">⚠ هذا اليوم محجوز بالفعل</div>
+        <div class="notice-body">عرس آخر مؤكد في هذا التاريخ. هذه الأيام المتاحة في نفس الأسبوع — اختر أحدها للمتابعة:</div>
+        <div class="alt-dates" id="altDates"></div>
+      </div>
+    </div>
+
+    <div class="section form-panel" id="formPanel">
+      <div class="selected-date-banner">
+        <span class="txt">تاريخ العرس المختار</span>
+        <span class="date" id="bannerDate">—</span>
+      </div>
+
+      <div class="field">
+        <label>اسم العريس</label>
+        <input type="text" id="groomName" placeholder="مثال: محمد أحمد">
+      </div>
+      <div class="field">
+        <label>رقم الهاتف</label>
+        <input type="tel" id="phone" placeholder="05XXXXXXXX">
+      </div>
+
+      <button class="submit-btn" id="submitBtn">تأكيد طلب الحجز</button>
+    </div>
+
+    <div class="confirm-panel" id="confirmPanel">
+      <div class="confirm-mark">✓</div>
+      <h2>تم استلام طلبك</h2>
+      <p>سيتم التواصل معك قريباً لتأكيد الحجز وترتيب دفع العربون.</p>
+      <div class="confirm-detail" id="confirmDetail"></div>
+    </div>
+
+  </div>
+
+  <div class="footnote">قاعة الماس · نموذج توضيحي للتجربة</div>
+</div>
+
+<script>
+// ====== ضع رابط Web App الخاص بك هنا ======
+const API_URL = "https://script.google.com/macros/s/AKfycbyBJJCYe1coimIJFQEWRqFLrpeUSIYwDVeIW-Vh3qQ-HDW-0cWMexH60r6x2pnWC78yYA/exec";
+// ===========================================
+
+const monthNames = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+
+const today = new Date();
+let viewYear = today.getFullYear();
+let viewMonth = today.getMonth();
+
+let bookedMap = {};
+let selectedDateStr = null;
+
+const calGrid = document.getElementById('calGrid');
+const monthLabel = document.querySelector('.month-nav .label');
+const hint = document.querySelector('.section-head .hint');
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function dateKey(y,m,d){ return `${y}-${pad(m+1)}-${pad(d)}`; }
+
+function setLoading(){
+  calGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px 0;color:rgba(242,232,216,0.4);font-size:13px;">جاري تحميل التواريخ المتاحة...</div>';
+}
+
+async function loadBookedDates(){
+  setLoading();
+  try{
+    const res = await fetch(API_URL, { method:'GET' });
+    const data = await res.json();
+    bookedMap = {};
+    if(data.success && Array.isArray(data.bookedDates)){
+      data.bookedDates.forEach(item => { bookedMap[item.date] = item.status; });
+    }
+  }catch(err){
+    console.error('فشل تحميل البيانات', err);
+    calGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px 10px;color:#E8B4B4;font-size:13px;line-height:1.8;">تعذّر الاتصال بنظام الحجز حالياً.<br>الرجاء المحاولة بعد قليل أو التواصل المباشر.</div>';
+    return false;
+  }
+  return true;
+}
+
+function renderCalendar(){
+  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+  const firstDayIndex = new Date(viewYear, viewMonth, 1).getDay();
+  const shift = (firstDayIndex + 1) % 7;
+
+  monthLabel.textContent = monthNames[viewMonth];
+  hint.textContent = `${monthNames[viewMonth]} ${viewYear}`;
+
+  calGrid.innerHTML = '';
+  for(let i=0;i<shift;i++){
+    const e = document.createElement('div');
+    e.className='day empty';
+    calGrid.appendChild(e);
+  }
+
+  const isCurrentMonth = (viewYear === today.getFullYear() && viewMonth === today.getMonth());
+
+  for(let d=1; d<=daysInMonth; d++){
+    const cell = document.createElement('div');
+    const key = dateKey(viewYear, viewMonth, d);
+    cell.textContent = d;
+    cell.dataset.day = d;
+    cell.dataset.key = key;
+
+    const isPast = isCurrentMonth && d < today.getDate();
+    let cls = 'day available';
+    if(isPast){
+      cls = 'day booked';
+      cell.style.opacity = '0.25';
+      cell.style.cursor = 'default';
+    } else if(bookedMap[key] === 'مؤكد'){
+      cls = 'day booked';
+    } else if(bookedMap[key] === 'قيد الانتظار'){
+      cls = 'day pending';
+    }
+    cell.className = cls;
+
+    if(isCurrentMonth && d === today.getDate()) cell.classList.add('today');
+
+    if(!isPast){
+      cell.addEventListener('click', () => handleDayClick(key, d, cell));
+    }
+    calGrid.appendChild(cell);
+  }
+}
+
+function getWeekRangeKeys(day){
+  const date = new Date(viewYear, viewMonth, day);
+  const dow = (date.getDay()+1)%7;
+  const satOffset = day - dow;
+  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+  const keys = [];
+  for(let i=0;i<7;i++){
+    const dd = satOffset + i;
+    if(dd>=1 && dd<=daysInMonth){
+      keys.push({ day: dd, key: dateKey(viewYear, viewMonth, dd) });
+    }
+  }
+  return keys;
+}
+
+function handleDayClick(key, d, cell){
+  document.getElementById('conflictNotice').classList.remove('show');
+  document.getElementById('formPanel').classList.remove('show');
+
+  if(bookedMap[key]){
+    const week = getWeekRangeKeys(d);
+    const free = week.filter(w => !bookedMap[w.key]);
+    const altWrap = document.getElementById('altDates');
+    altWrap.innerHTML = '';
+    if(free.length === 0){
+      altWrap.innerHTML = `<span style="font-size:12.5px;color:rgba(242,232,216,0.5)">لا توجد أيام متاحة هذا الأسبوع في ${monthNames[viewMonth]}، جرّب أسبوعاً آخر</span>`;
+    } else {
+      free.forEach(w=>{
+        const chip = document.createElement('div');
+        chip.className='alt-chip';
+        chip.textContent = `${w.day} ${monthNames[viewMonth]}`;
+        chip.addEventListener('click', ()=>{
+          const targetCell = calGrid.querySelector(`[data-key="${w.key}"]`);
+          handleDayClick(w.key, w.day, targetCell);
+          targetCell.scrollIntoView({behavior:'smooth', block:'center'});
+        });
+        altWrap.appendChild(chip);
+      });
+    }
+    document.getElementById('conflictNotice').classList.add('show');
+    return;
+  }
+
+  document.querySelectorAll('.day.selected').forEach(x=>x.classList.remove('selected'));
+  cell.classList.add('selected');
+  selectedDateStr = key;
+  document.getElementById('bannerDate').textContent = `${d} ${monthNames[viewMonth]} ${viewYear}`;
+  document.getElementById('formPanel').classList.add('show');
+  document.getElementById('formPanel').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+document.querySelectorAll('.nav-btn')[0].addEventListener('click', async ()=>{
+  viewMonth++;
+  if(viewMonth>11){ viewMonth=0; viewYear++; }
+  await loadBookedDates();
+  renderCalendar();
+});
+document.querySelectorAll('.nav-btn')[1].addEventListener('click', async ()=>{
+  if(viewYear === today.getFullYear() && viewMonth === today.getMonth()) return;
+  viewMonth--;
+  if(viewMonth<0){ viewMonth=11; viewYear--; }
+  await loadBookedDates();
+  renderCalendar();
+});
+
+const submitBtn = document.getElementById('submitBtn');
+submitBtn.addEventListener('click', async ()=>{
+  const name = document.getElementById('groomName').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  if(!name || !phone){
+    alert('الرجاء تعبئة اسم العريس ورقم الهاتف');
+    return;
+  }
+  if(!selectedDateStr){
+    alert('الرجاء اختيار تاريخ أولاً');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'جاري إرسال الطلب...';
+
+  try{
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ date: selectedDateStr, groomName: name, phone: phone })
+    });
+    const data = await res.json();
+
+    if(!data.success){
+      alert(data.error || 'حدث خطأ، الرجاء المحاولة مرة أخرى');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'تأكيد طلب الحجز';
+      await loadBookedDates();
+      renderCalendar();
+      return;
+    }
+
+    document.getElementById('bookingFlow').querySelectorAll('.section, .form-panel').forEach(s=>s.style.display='none');
+    const [yy,mm,dd] = selectedDateStr.split('-');
+    const cd = document.getElementById('confirmDetail');
+    cd.innerHTML = `
+      <div><b>رقم الحجز:</b> ${data.bookingNumber}</div>
+      <div><b>التاريخ:</b> ${parseInt(dd)} ${monthNames[parseInt(mm)-1]} ${yy}</div>
+      <div><b>اسم العريس:</b> ${name}</div>
+      <div><b>الهاتف:</b> ${phone}</div>
+      <div><b>الحالة:</b> قيد الانتظار</div>
+    `;
+    document.getElementById('confirmPanel').classList.add('show');
+  }catch(err){
+    console.error(err);
+    alert('تعذّر إرسال الطلب، تحقق من اتصالك بالإنترنت وحاول مرة أخرى');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'تأكيد طلب الحجز';
+  }
+});
+
+(async function init(){
+  await loadBookedDates();
+  renderCalendar();
+})();
+</script>
+</body>
+</html>
